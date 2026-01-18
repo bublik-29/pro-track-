@@ -21,7 +21,6 @@ const WorkoutSetup: React.FC<Props> = ({ date, history, onStart, onDelete, theme
   const isDark = theme === 'dark';
   const locales = { en: enUS, es: es, fr: fr, ru: ru, pl: pl };
 
-  // Check if session already exists for this day
   const existingSession = history.find(h => isSameDay(parseISO(h.date), date));
   const isDateToday = isToday(date);
   
@@ -45,7 +44,6 @@ const WorkoutSetup: React.FC<Props> = ({ date, history, onStart, onDelete, theme
     setAiTip(t.loadingTip);
     const prev = history.find(h => h.blockId === selectedBlock.id);
     
-    // Fetch tip in selected language
     const translatedBlockName = t[selectedBlock.name as keyof typeof t] || selectedBlock.name;
     const translatedExercises = selectedBlock.exercises.map(exKey => t[exKey as keyof typeof t] || exKey);
     
@@ -64,7 +62,6 @@ const WorkoutSetup: React.FC<Props> = ({ date, history, onStart, onDelete, theme
     setExercises(initialExercises);
   }, [selectedBlock, history, language, existingSession, t.loadingTip, t.sessionComplete]);
 
-  // Delete hold progress logic
   useEffect(() => {
     let animationFrame: number;
     const checkDelete = () => {
