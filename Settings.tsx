@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Sun, Moon, Languages, Check } from 'lucide-react';
-import { Theme, Language } from '../types';
-import { translations } from '../translations';
+import { Theme, Language } from './types';
+import { translations } from './translations';
 
 interface Props {
   theme: Theme;
@@ -31,7 +30,6 @@ const Settings: React.FC<Props> = ({ theme, setTheme, language, setLanguage, onB
       </div>
 
       <div className="space-y-6">
-        {/* Language Section */}
         <div className="space-y-4">
           <h3 className={`text-xs font-black uppercase tracking-widest flex items-center gap-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
             <Languages className="w-4 h-4" /> {t.language}
@@ -50,7 +48,6 @@ const Settings: React.FC<Props> = ({ theme, setTheme, language, setLanguage, onB
           </div>
         </div>
 
-        {/* Theme Section */}
         <div className="space-y-4">
           <h3 className={`text-xs font-black uppercase tracking-widest flex items-center gap-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
             <Sun className="w-4 h-4" /> {t.theme}
