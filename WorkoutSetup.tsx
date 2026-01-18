@@ -1,12 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
-import { format, isSameDay, parseISO } from 'date-fns';
+import { format, isSameDay, parseISO, isToday } from 'date-fns';
 import { enUS, es, fr, ru, pl } from 'date-fns/locale';
-import { Play, Dumbbell, History, Sparkles, Trash2, ShieldAlert } from 'lucide-react';
-import { WorkoutBlock, WorkoutSession, ExerciseData, SetRecord, Theme, Language } from '../types';
-import { WORKOUT_BLOCKS, FINISH_HOLD_TIME } from '../constants';
-import { translations } from '../translations';
-import { getWorkoutTip } from '../services/geminiService';
+import { Play, Dumbbell, History, Sparkles, Trash2, ShieldAlert, Lock } from 'lucide-react';
+import { WorkoutBlock, WorkoutSession, ExerciseData, SetRecord, Theme, Language } from './types';
+import { WORKOUT_BLOCKS, FINISH_HOLD_TIME } from './constants';
+import { translations } from './translations';
+import { getWorkoutTip } from './geminiService';
 
 interface Props {
   date: Date;
@@ -24,6 +23,7 @@ const WorkoutSetup: React.FC<Props> = ({ date, history, onStart, onDelete, theme
 
   // Check if session already exists for this day
   const existingSession = history.find(h => isSameDay(parseISO(h.date), date));
+  const isDateToday = isToday(date);
   
   const initialBlock = existingSession 
     ? (WORKOUT_BLOCKS.find(b => b.id === existingSession.blockId) || WORKOUT_BLOCKS[0])
@@ -62,7 +62,7 @@ const WorkoutSetup: React.FC<Props> = ({ date, history, onStart, onDelete, theme
       };
     });
     setExercises(initialExercises);
-  }, [selectedBlock, history, language, existingSession]);
+  }, [selectedBlock, history, language, existingSession, t.loadingTip, t.sessionComplete]);
 
   // Delete hold progress logic
   useEffect(() => {
@@ -85,10 +85,10 @@ const WorkoutSetup: React.FC<Props> = ({ date, history, onStart, onDelete, theme
     };
     if (deleteHoldStart) animationFrame = requestAnimationFrame(checkDelete);
     return () => cancelAnimationFrame(animationFrame);
-  }, [deleteHoldStart, existingSession]);
+  }, [deleteHoldStart, existingSession, onDelete]);
 
   const updateSet = (exerciseIndex: number, setIndex: number, field: keyof SetRecord, value: number) => {
-    if (existingSession) return; // Prevent updates if session exists
+    if (existingSession || !isDateToday) return; 
     const updated = [...exercises];
     updated[exerciseIndex].sets[setIndex][field] = value;
     setExercises(updated);
@@ -103,14 +103,14 @@ const WorkoutSetup: React.FC<Props> = ({ date, history, onStart, onDelete, theme
         {WORKOUT_BLOCKS.map(block => (
           <button
             key={block.id}
-            disabled={!!existingSession}
+            disabled={!!existingSession || !isDateToday}
             onClick={() => setSelectedBlock(block)}
             className={`
               flex-1 py-3 px-2 rounded-lg text-sm font-bold transition-all
               ${selectedBlock.id === block.id 
                 ? 'bg-indigo-600 text-white shadow-lg' 
                 : (isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50' : 'text-slate-500 hover:bg-white hover:text-indigo-600')}
-              ${existingSession && selectedBlock.id !== block.id ? 'opacity-20 cursor-not-allowed' : ''}
+              ${(existingSession || !isDateToday) && selectedBlock.id !== block.id ? 'opacity-20 cursor-not-allowed' : ''}
             `}
           >
             {block.id}
@@ -173,19 +173,19 @@ const WorkoutSetup: React.FC<Props> = ({ date, history, onStart, onDelete, theme
                   <div className="col-span-5">
                     <input 
                       type="number"
-                      readOnly={!!existingSession}
+                      readOnly={!!existingSession || !isDateToday}
                       value={set.weight || ''}
                       onChange={(e) => updateSet(exIdx, setIdx, 'weight', parseFloat(e.target.value) || 0)}
-                      className={`w-full border rounded-lg px-3 py-2 font-semibold mono outline-none transition-all ${isDark ? 'bg-slate-900 border-slate-700 text-white focus:ring-indigo-500' : 'bg-white border-slate-200 text-slate-900 focus:ring-indigo-200 focus:border-indigo-400 shadow-sm'} ${existingSession ? 'opacity-70 cursor-default' : ''}`}
+                      className={`w-full border rounded-lg px-3 py-2 font-semibold mono outline-none transition-all ${isDark ? 'bg-slate-900 border-slate-700 text-white focus:ring-indigo-500' : 'bg-white border-slate-200 text-slate-900 focus:ring-indigo-200 focus:border-indigo-400 shadow-sm'} ${existingSession || !isDateToday ? 'opacity-70 cursor-default' : ''}`}
                     />
                   </div>
                   <div className="col-span-5">
                      <input 
                       type="number"
-                      readOnly={!!existingSession}
+                      readOnly={!!existingSession || !isDateToday}
                       value={set.reps || ''}
                       onChange={(e) => updateSet(exIdx, setIdx, 'reps', parseInt(e.target.value) || 0)}
-                      className={`w-full border rounded-lg px-3 py-2 font-semibold mono outline-none transition-all ${isDark ? 'bg-slate-900 border-slate-700 text-white focus:ring-indigo-500' : 'bg-white border-slate-200 text-slate-900 focus:ring-indigo-200 focus:border-indigo-400 shadow-sm'} ${existingSession ? 'opacity-70 cursor-default' : ''}`}
+                      className={`w-full border rounded-lg px-3 py-2 font-semibold mono outline-none transition-all ${isDark ? 'bg-slate-900 border-slate-700 text-white focus:ring-indigo-500' : 'bg-white border-slate-200 text-slate-900 focus:ring-indigo-200 focus:border-indigo-400 shadow-sm'} ${existingSession || !isDateToday ? 'opacity-70 cursor-default' : ''}`}
                     />
                   </div>
                 </div>
@@ -195,15 +195,26 @@ const WorkoutSetup: React.FC<Props> = ({ date, history, onStart, onDelete, theme
         ))}
       </div>
 
-      {!existingSession ? (
-        <button
-          onClick={() => onStart(selectedBlock, exercises)}
-          className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-widest py-5 rounded-2xl shadow-xl shadow-indigo-600/20 transition-all active:scale-95 flex items-center justify-center gap-2 pulse-start group"
-        >
-          <Play className="w-6 h-6 fill-white group-hover:scale-110 transition-transform" />
-          {t.startTraining}
-        </button>
+      {isDateToday ? (
+        !existingSession && (
+          <button
+            onClick={() => onStart(selectedBlock, exercises)}
+            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black uppercase tracking-widest py-5 rounded-2xl shadow-xl shadow-indigo-600/20 transition-all active:scale-95 flex items-center justify-center gap-2 pulse-start group"
+          >
+            <Play className="w-6 h-6 fill-white group-hover:scale-110 transition-transform" />
+            {t.startTraining}
+          </button>
+        )
       ) : (
+        !existingSession && (
+          <div className={`p-6 rounded-2xl border border-dashed flex flex-col items-center gap-2 text-center ${isDark ? 'border-slate-700 bg-slate-800/20 text-slate-500' : 'border-slate-300 bg-slate-50 text-slate-400'}`}>
+            <Lock className="w-8 h-8 opacity-40" />
+            <p className="text-xs font-bold uppercase tracking-widest">{t.onlyToday}</p>
+          </div>
+        )
+      )}
+
+      {existingSession && (
         <div className="space-y-4 pt-4">
           <div className={`text-center text-[10px] font-bold uppercase tracking-widest ${isDark ? 'text-rose-500/80' : 'text-rose-600'}`}>
              <ShieldAlert className="w-4 h-4 mx-auto mb-1" />
@@ -212,10 +223,11 @@ const WorkoutSetup: React.FC<Props> = ({ date, history, onStart, onDelete, theme
           <button
             onMouseDown={handleHoldStart} onMouseUp={handleHoldEnd} onMouseLeave={handleHoldEnd}
             onTouchStart={handleHoldStart} onTouchEnd={handleHoldEnd}
+            onContextMenu={(e) => e.preventDefault()}
             className={`relative w-full h-20 rounded-2xl overflow-hidden group select-none transition-all active:scale-[0.98] ${isDark ? 'bg-slate-800' : 'bg-slate-200'}`}
           >
-            <div className="absolute inset-y-0 left-0 bg-rose-600 transition-all duration-75" style={{ width: `${deleteProgress}%` }} />
-            <div className="absolute inset-0 flex items-center justify-center gap-3">
+            <div className="absolute inset-y-0 left-0 bg-rose-600 z-0" style={{ width: `${deleteProgress}%` }} />
+            <div className="absolute inset-0 flex items-center justify-center gap-3 z-10">
                <div className={`p-2 rounded-xl border group-hover:scale-110 transition-transform ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'} ${deleteProgress > 0 ? 'scale-90 border-rose-500' : ''}`}>
                   <Trash2 className={`w-6 h-6 ${deleteProgress > 50 ? 'text-rose-100' : (isDark ? 'text-rose-500' : 'text-rose-600')}`} />
                </div>
