@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addDays, isToday, startOfWeek, endOfWeek, isSameMonth, subMonths, addMonths, parseISO, isAfter, startOfDay } from 'date-fns';
 import { enUS, es, fr, ru, pl } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, CheckCircle2, Moon, Calendar as CalendarIcon } from 'lucide-react';
-import { WorkoutSession, Theme, Language } from '../types';
-import { translations } from '../translations';
+import { WorkoutSession, Theme, Language } from './types';
+import { translations } from './translations';
 
 interface Props {
   history: WorkoutSession[];
@@ -24,7 +23,6 @@ const WorkoutCalendar: React.FC<Props> = ({ history, onDayClick, theme, language
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
   
-  // date-fns automatically uses the locale's first day of the week (Monday for RU/PL)
   const calendarStart = startOfWeek(monthStart, { locale: currentLocale });
   const calendarEnd = endOfWeek(monthEnd, { locale: currentLocale });
 
@@ -33,7 +31,6 @@ const WorkoutCalendar: React.FC<Props> = ({ history, onDayClick, theme, language
     end: calendarEnd,
   });
 
-  // Generate localized day headers starting from the locale's first day of the week
   const weekDays = [];
   const startOfViewWeek = startOfWeek(new Date(), { locale: currentLocale });
   for (let i = 0; i < 7; i++) {
@@ -49,7 +46,6 @@ const WorkoutCalendar: React.FC<Props> = ({ history, onDayClick, theme, language
   };
 
   const handleGoToToday = () => {
-    // Only navigate the month view, don't trigger the day click action
     setCurrentMonth(new Date());
   };
 
@@ -97,19 +93,16 @@ const WorkoutCalendar: React.FC<Props> = ({ history, onDayClick, theme, language
           const status = getStatus(day);
           const isSelectedMonth = isSameMonth(day, monthStart);
           const today = isToday(day);
-          const isFuture = isAfter(startOfDay(day), startOfDay(new Date()));
 
           return (
             <button
               key={i}
-              disabled={isFuture && !status.data}
               onClick={() => onDayClick(day)}
               className={`
-                relative h-16 border-b border-r p-1 flex flex-col items-center justify-center transition-all group
+                relative h-16 border-b border-r p-1 flex flex-col items-center justify-center transition-all group cursor-pointer
                 ${isDark ? 'border-slate-700' : 'border-slate-100'}
                 ${!isSelectedMonth ? (isDark ? 'bg-slate-900/20 text-slate-600' : 'bg-slate-50 text-slate-300') : (isDark ? 'text-slate-300 hover:bg-slate-700/50' : 'text-slate-700 hover:bg-slate-50')}
                 ${today ? (isDark ? 'bg-indigo-900/20 ring-1 ring-inset ring-indigo-500/50' : 'bg-indigo-50 ring-1 ring-inset ring-indigo-200') : ''}
-                ${isFuture && !status.data ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'}
               `}
             >
               <span className={`text-xs font-medium mb-1 ${today ? 'text-indigo-500 font-bold underline decoration-2 underline-offset-4' : ''}`}>
