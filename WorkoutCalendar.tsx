@@ -18,7 +18,7 @@ const WorkoutCalendar: React.FC<Props> = ({ history, onDayClick, theme, language
   const isDark = theme === 'dark';
 
   const locales = { en: enUS, es: es, fr: fr, ru: ru, pl: pl };
-  const currentLocale = locales[language];
+  const currentLocale = locales[language] || enUS;
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -39,10 +39,10 @@ const WorkoutCalendar: React.FC<Props> = ({ history, onDayClick, theme, language
 
   const getStatus = (date: Date) => {
     const workout = history.find(h => isSameDay(parseISO(h.date), date));
-    if (workout) return { type: 'WORKOUT', data: workout };
+    if (workout) return { type: 'WORKOUT' as const, data: workout };
     const restCheck = history.some(h => isSameDay(addDays(parseISO(h.date), 1), date));
-    if (restCheck) return { type: 'REST' };
-    return { type: 'NONE' };
+    if (restCheck) return { type: 'REST' as const };
+    return { type: 'NONE' as const };
   };
 
   const handleGoToToday = () => {
