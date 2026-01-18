@@ -120,7 +120,7 @@ const WorkoutSetup: React.FC<Props> = ({ date, history, onStart, onDelete, theme
            {t[selectedBlock.name as keyof typeof t] || selectedBlock.name}
         </h2>
         <p className={`${isDark ? 'text-slate-400' : 'text-slate-500'} text-sm`}>
-          {t.preparation} {format(date, 'MMMM do, yyyy', { locale: locales[language] })}
+          {t.preparation} {format(date, 'MMMM do, yyyy', { locale: (locales[language] || enUS) })}
         </p>
       </div>
 
