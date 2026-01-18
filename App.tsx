@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { isSameDay, addDays } from 'date-fns';
 import { Activity, ChevronLeft, Settings as SettingsIcon } from 'lucide-react';
@@ -18,7 +17,6 @@ const App: React.FC = () => {
   const [activeDate, setActiveDate] = useState<Date>(new Date());
   const [currentSessionDraft, setCurrentSessionDraft] = useState<ExerciseData[]>([]);
   
-  // Settings State
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('protrack_theme') as Theme) || 'dark');
   const [language, setLanguage] = useState<Language>(() => (localStorage.getItem('protrack_lang') as Language) || 'en');
 
@@ -29,7 +27,6 @@ const App: React.FC = () => {
     localStorage.setItem('protrack_lang', language);
   }, [theme, language]);
 
-  // Load history from localStorage
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -86,7 +83,6 @@ const App: React.FC = () => {
     <div className={`min-h-screen max-w-2xl mx-auto shadow-2xl overflow-hidden relative border-x flex flex-col transition-colors duration-300
       ${isDark ? 'bg-slate-900 border-slate-800 text-slate-100' : 'bg-slate-50 border-slate-200 text-slate-900'}
     `}>
-      {/* Header */}
       <header className={`sticky top-0 z-30 backdrop-blur-md border-b p-4 flex items-center justify-between shrink-0 transition-colors
         ${isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white/90 border-slate-200'}
       `}>
@@ -120,7 +116,6 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto p-4 pb-32">
         {view === 'CALENDAR' && (
           <WorkoutCalendar 
@@ -164,12 +159,10 @@ const App: React.FC = () => {
         )}
       </main>
 
-      {/* Overlay Screens */}
       {view === 'COUNTDOWN' && (
         <CountdownOverlay onFinished={handleCountdownFinished} language={language} />
       )}
 
-      {/* Stats/Footer */}
       {view === 'CALENDAR' && (
         <div className={`fixed bottom-0 left-0 right-0 max-w-2xl mx-auto backdrop-blur-md border-t p-4 z-20 transition-colors
           ${isDark ? 'bg-slate-900/95 border-slate-800' : 'bg-white/95 border-slate-200'}
