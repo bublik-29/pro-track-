@@ -18,18 +18,15 @@ const ActiveWorkout: React.FC<Props> = ({ block, date, draft, onFinish, theme, l
   const [holdStartTime, setHoldStartTime] = useState<number | null>(null);
   const [holdProgress, setHoldProgress] = useState(0);
   
-  // Set completion logic
   const [completedSets, setCompletedSets] = useState<Record<string, boolean>>({});
   const [setHoldId, setSetHoldId] = useState<string | null>(null);
   const [setExerciseHoldProgress, setSetExerciseHoldProgress] = useState(0);
 
-  // Timer logic
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
 
   const t = translations[language];
   const isDark = theme === 'dark';
 
-  // Session Finish Hold (3s)
   useEffect(() => {
     let animationFrame: number;
     const checkHold = () => {
@@ -51,7 +48,6 @@ const ActiveWorkout: React.FC<Props> = ({ block, date, draft, onFinish, theme, l
     return () => cancelAnimationFrame(animationFrame);
   }, [holdStartTime]);
 
-  // Set Completion Hold (3s)
   useEffect(() => {
     let animationFrame: number;
     const checkSetHold = () => {
@@ -60,7 +56,7 @@ const ActiveWorkout: React.FC<Props> = ({ block, date, draft, onFinish, theme, l
         const start = parseInt(parts[2]);
         const now = Date.now();
         const diff = now - start;
-        const progress = Math.min((diff / 3000) * 100, 100);
+        const progress = Math.min((diff / 2000) * 100, 100); // 2s for set completion
         setSetExerciseHoldProgress(progress);
         
         if (progress >= 100) {
@@ -79,7 +75,6 @@ const ActiveWorkout: React.FC<Props> = ({ block, date, draft, onFinish, theme, l
     return () => cancelAnimationFrame(animationFrame);
   }, [setHoldId]);
 
-  // Rest Timer
   useEffect(() => {
     if (timeLeft === null) return;
     if (timeLeft <= 0) {
@@ -92,12 +87,10 @@ const ActiveWorkout: React.FC<Props> = ({ block, date, draft, onFinish, theme, l
     return () => clearInterval(timer);
   }, [timeLeft]);
 
-  const handleHoldStart = (e: React.MouseEvent | React.TouchEvent) => {
-    setHoldStartTime(Date.now());
-  };
+  const handleHoldStart = () => setHoldStartTime(Date.now());
   const handleHoldEnd = () => setHoldStartTime(null);
 
-  const handleSetHoldStart = (e: React.MouseEvent | React.TouchEvent, exIdx: number, setIdx: number) => {
+  const handleSetHoldStart = (exIdx: number, setIdx: number) => {
     const key = `${exIdx}-${setIdx}`;
     if (completedSets[key]) return;
     setSetHoldId(`${exIdx}-${setIdx}-${Date.now()}`);
@@ -122,7 +115,6 @@ const ActiveWorkout: React.FC<Props> = ({ block, date, draft, onFinish, theme, l
 
   return (
     <div className="space-y-6 pb-40 select-none">
-      {/* Rest Timer Interface */}
       <div className={`p-6 rounded-3xl border transition-all duration-500 ${timeLeft !== null ? 'bg-indigo-600 border-indigo-400 shadow-xl shadow-indigo-500/20' : (isDark ? 'bg-slate-800/40 border-slate-700' : 'bg-slate-100 border-slate-200 shadow-inner')}`}>
         {timeLeft !== null ? (
           <div className="flex flex-col items-center justify-center animate-in zoom-in duration-300">
@@ -163,7 +155,6 @@ const ActiveWorkout: React.FC<Props> = ({ block, date, draft, onFinish, theme, l
         )}
       </div>
 
-      {/* Workout Plan Section */}
       <div className="space-y-6">
          <h3 className="text-sm font-black uppercase tracking-widest text-slate-500 ml-2 flex items-center gap-2">
            <Target className="w-4 h-4" /> {t.sessionGoals}
@@ -194,15 +185,14 @@ const ActiveWorkout: React.FC<Props> = ({ block, date, draft, onFinish, theme, l
                   return (
                     <div 
                       key={si} 
-                      onMouseDown={(e) => handleSetHoldStart(e, exIdx, si)} 
+                      onMouseDown={() => handleSetHoldStart(exIdx, si)} 
                       onMouseUp={handleSetHoldEnd} 
                       onMouseLeave={handleSetHoldEnd}
-                      onTouchStart={(e) => handleSetHoldStart(e, exIdx, si)} 
+                      onTouchStart={() => handleSetHoldStart(exIdx, si)} 
                       onTouchEnd={handleSetHoldEnd}
                       onContextMenu={(e) => e.preventDefault()}
                       className={`relative grid grid-cols-12 gap-2 items-center p-4 rounded-xl cursor-pointer overflow-hidden select-none active:scale-[0.98] ${isDone ? 'bg-emerald-500 shadow-lg shadow-emerald-500/20' : (isDark ? 'bg-slate-900/40 hover:bg-slate-900/60' : 'bg-slate-50 hover:bg-slate-100')}`}
                     >
-                      {/* Hold Progress Overlay - NO CSS TRANSITION for direct width updates */}
                       {isThisSetHolding && !isDone && (
                         <div 
                           className="absolute inset-y-0 left-0 bg-emerald-400 z-0 opacity-40" 
@@ -235,7 +225,6 @@ const ActiveWorkout: React.FC<Props> = ({ block, date, draft, onFinish, theme, l
          ))}
       </div>
 
-      {/* Completion Button */}
       <div className={`fixed bottom-0 left-0 right-0 max-w-2xl mx-auto p-4 backdrop-blur-md z-30 transition-colors ${isDark ? 'bg-slate-900/80' : 'bg-white/80 border-t border-slate-100'}`}>
         <button
           onMouseDown={handleHoldStart} 
@@ -246,7 +235,6 @@ const ActiveWorkout: React.FC<Props> = ({ block, date, draft, onFinish, theme, l
           onContextMenu={(e) => e.preventDefault()}
           className={`relative w-full h-20 rounded-2xl overflow-hidden group select-none transition-all active:scale-[0.98] ${isDark ? 'bg-slate-800 shadow-inner border border-slate-700' : 'bg-slate-100 border border-slate-200 shadow-inner'}`}
         >
-          {/* Main Hold Progress Overlay - NO CSS TRANSITION for direct width updates */}
           <div 
             className="absolute inset-y-0 left-0 bg-emerald-600 z-0" 
             style={{ width: `${holdProgress}%` }} 
